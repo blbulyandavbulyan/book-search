@@ -1,4 +1,4 @@
-package com.blbulyandavbulyan.booksearch.service;
+package com.blbulyandavbulyan.booksearch.service.parser;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,7 +26,7 @@ public class BookEpubParser implements BookParser {
             final var epubBook = epubReader.readEpub(fileInputStream);
 
             return Book.builder()
-                    .id(UUID.randomUUID())
+                    .id(UUID.randomUUID().toString())
                     .title(epubBook.getTitle())
                     .authors(getAuthorNamesFromEpubBook(epubBook))
                     .language(epubBook.getMetadata().getLanguage())

@@ -6,10 +6,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix = "solr")
+@ConfigurationProperties(prefix = "elasticsearch")
 @Getter
 @Setter
-public class SolrConfigurationProperties {
+public class ElasticSearchConfigurationProperties {
     private String url;
-
+    private String apiKey;
 }
