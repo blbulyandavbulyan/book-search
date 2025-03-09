@@ -10,10 +10,4 @@ public record BookResponse(String id,
                            List<String> authors,
                            String fileName,
                            String language) {
-    @SuppressWarnings("unused")// suppress warnings because these enums will come from the request
-    public enum BookFilterField {
-        LANGUAGE,
-        AUTHORS,
-        TITLE
-    }
 }

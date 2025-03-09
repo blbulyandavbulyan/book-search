@@ -36,7 +36,7 @@ public class BookResponseMapper {
     private FacetResponse toFacetResponse(FacetResource facetResource) {
         return FacetResponse.builder()
                 .value(facetResource.value())
-                .field(BookFacetField.valueOf(facetResource.field().name()))
+                .field(facetResource.field())
                 .valueCount(facetResource.valueCount())
                 .build();
     }

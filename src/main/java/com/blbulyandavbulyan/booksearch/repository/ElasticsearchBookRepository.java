@@ -29,6 +29,7 @@ public class ElasticsearchBookRepository implements BookRepository {
     private final JacksonPropertyNamesResolver jacksonPropertyNamesResolver;
     private final AliasesConfigurationProperties aliasesConfigurationProperties;
     private static final String FACETS_AGGREGATION_NAME = "facets";
+    private static final String CONTENT_FIELD_NAME = "content";
 
     @Override
     public Optional<BookResource> findById(String id) {
@@ -79,7 +80,10 @@ public class ElasticsearchBookRepository implements BookRepository {
     }
 
     private static Query buildMainQuery(BookSearchQuery bookSearchQuery) {
-        return QueryBuilders.match(mqb -> mqb.field("content").query(bookSearchQuery.query()));
+        String query = bookSearchQuery.query();
+        return bookSearchQuery.matchPhrase() ?
+                QueryBuilders.matchPhrase(mpb -> mpb.field(CONTENT_FIELD_NAME).query(query)) :
+                QueryBuilders.match(mqb -> mqb.field(CONTENT_FIELD_NAME).query(query));
     }
 
     private Query buildFilterQuery(BookSearchQuery bookSearchQuery) {

@@ -1,17 +1,21 @@
 package com.blbulyandavbulyan.booksearch.controller;
 
+import com.blbulyandavbulyan.booksearch.service.search.BookFacetField;
+import com.blbulyandavbulyan.booksearch.service.search.BookFilterField;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchQuery;
 
-public record BookSearchRequest(BookResponse.BookFilterField filterField,
+public record BookSearchRequest(BookFilterField filterField,
                                 String filterValue,
                                 BookFacetField facetField,
-                                String query) {
+                                String query,
+                                boolean matchPhrase) {
     public BookSearchQuery toBookSearchResource() {
         return BookSearchQuery.builder()
-                .filterField(BookSearchQuery.BookFilterField.valueOf(filterField.name()))
+                .filterField(filterField)
                 .filterValue(filterValue)
-                .facetField(com.blbulyandavbulyan.booksearch.service.search.BookFacetField.valueOf(facetField.name()))
+                .facetField(facetField)
                 .query(query)
+                .matchPhrase(matchPhrase)
                 .build();
     }
 
