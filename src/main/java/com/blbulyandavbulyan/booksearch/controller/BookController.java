@@ -40,7 +40,7 @@ public class BookController {
 
     @PostMapping("index-all")
     public MessageResponse indexAll(){
-        indexingService.reindexBooks();
+        indexingService.indexBooks();
         return new MessageResponse("Indexing is done successfully");
     }
 }

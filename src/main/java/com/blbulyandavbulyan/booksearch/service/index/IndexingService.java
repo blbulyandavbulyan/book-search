@@ -32,11 +32,11 @@ public class IndexingService {
     @Value("${book-search.books-directory}")
     private final Path booksDirectory;
 
-    public void reindexBooks() {
+    public void indexBooks() {
         String booksIndexName = "books-" + System.currentTimeMillis();
         createBooksIndex(booksIndexName);
         indexBooks(booksIndexName);
-        reassignOrCreateAliasWithoutDowntime(aliasesConfigurationProperties.getBooksName(), booksIndexName);
+        reassignAlias(aliasesConfigurationProperties.getBooksName(), booksIndexName);
     }
 
     private void createBooksIndex(String booksIndexName) {
@@ -48,7 +48,6 @@ public class IndexingService {
             throw new IndexCreationException("Error during creating index: " + booksIndexName, e);
         }
     }
-
 
     private void indexBooks(String booksIndex) {
         try(BulkIngester<Object> bulkIngester = createBulkIngester()) {
@@ -84,7 +83,7 @@ public class IndexingService {
                 .flushInterval(bulkConfiguration.getFlushIntervalValue(), bulkConfiguration.getFlushIntervalTimeUnit()));
     }
 
-    private void reassignOrCreateAliasWithoutDowntime(String aliasName, String newIndex) {
+    private void reassignAlias(String aliasName, String newIndex) {
         try {
             final var aliasUpdateBuilder = new UpdateAliasesRequest.Builder();
             if (aliasExists(aliasName)) {
