@@ -12,4 +12,7 @@ import org.springframework.stereotype.Component;
 public class ElasticSearchConfigurationProperties {
     private String url;
     private String apiKey;
+    private String username;
+    private String password;
+    private String sslFingerprint;
 }
