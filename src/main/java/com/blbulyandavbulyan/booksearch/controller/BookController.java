@@ -39,7 +39,8 @@ public class BookController {
     }
 
     @PostMapping("index-all")
-    public void indexAll(){
+    public MessageResponse indexAll(){
         indexingService.reindexBooks();
+        return new MessageResponse("Indexing is done successfully");
     }
 }

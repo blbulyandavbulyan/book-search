@@ -14,12 +14,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.net.ssl.SSLContext;
+import java.io.IOException;
 
 @Configuration
 public class ElasticSearchConfiguration {
     @Bean
-    public RestClient restClient(ElasticSearchConfigurationProperties properties) {
-        SSLContext sslContext = TransportUtils.sslContextFromCaFingerprint(properties.getSslFingerprint());
+    public RestClient restClient(ElasticSearchConfigurationProperties properties) throws IOException {
+        SSLContext sslContext = TransportUtils.sslContextFromHttpCaCrt(properties.getCaCrtPath().toFile());
 
         BasicCredentialsProvider credsProv = new BasicCredentialsProvider();
         credsProv.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(properties.getUsername(), properties.getPassword()));

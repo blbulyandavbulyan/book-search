@@ -25,11 +25,22 @@ public class IndexingService {
     private final ElasticsearchClient elasticsearchClient;
     private final BookParser bookParser;
     private final FileFinderService fileFinderService;
-    @Value("book-search.books-directory")
+    @Value("${book-search.books-directory}")
     private final Path booksDirectory;
 
     public void reindexBooks() {
         String booksIndex = "books-" + System.currentTimeMillis();
+        try {
+            elasticsearchClient.indices().create(b -> b.index(booksIndex)
+                    .withJson(getClass().getResourceAsStream("/mappings/books-index.json")));
+            indexBooks(booksIndex);
+            reassignOrCreateAliasWithoutDowntime("books", booksIndex);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void indexBooks(String booksIndex) {
         try(BulkIngester<Object> bulkIngester = createBulkIngester()) {
             Collection<Path> epubBookPaths = fileFinderService.findAllFilesInDirectoryByExtension(booksDirectory, ".epub");
             for (Path epubBookPath : epubBookPaths) {
@@ -48,9 +59,8 @@ public class IndexingService {
                     log.error("Failed to parse book: {}", epubBookPath, e);
                 }
             }
-            reassignOrCreateAliasWithoutDowntime("books", booksIndex);
-
         } catch (IOException e) {
+            //todo fix this exception
             throw new RuntimeException(e);
         }
     }

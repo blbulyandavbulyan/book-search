@@ -15,7 +15,7 @@ public class FileFinderService {
     Collection<Path> findAllFilesInDirectoryByExtension(Path directory, String extension) throws IOException {
         try (Stream<Path> pathStream = Files.walk(directory)) {
             return pathStream.filter(Files::isRegularFile)
-                    .filter(path -> path.endsWith(extension))
+                    .filter(path -> path.toString().endsWith(extension))
                     .toList();
         }
     }
