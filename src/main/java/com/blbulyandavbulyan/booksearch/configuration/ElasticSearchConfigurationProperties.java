@@ -17,4 +17,5 @@ public class ElasticSearchConfigurationProperties {
     private String username;
     private String password;
     private Path caCrtPath;
+    private String aliasName;
 }

@@ -4,8 +4,10 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._helpers.bulk.BulkIngester;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.indices.*;
+import com.blbulyandavbulyan.booksearch.configuration.AliasesConfigurationProperties;
 import com.blbulyandavbulyan.booksearch.configuration.ElasticSearchBulkConfiguration;
 import com.blbulyandavbulyan.booksearch.model.BookDocument;
+import com.blbulyandavbulyan.booksearch.service.file.FileFinderException;
 import com.blbulyandavbulyan.booksearch.service.file.FileFinderService;
 import com.blbulyandavbulyan.booksearch.service.parser.BookParseException;
 import com.blbulyandavbulyan.booksearch.service.parser.BookParser;
@@ -26,20 +28,27 @@ public class IndexingService {
     private final ElasticsearchClient elasticsearchClient;
     private final BookParser bookParser;
     private final FileFinderService fileFinderService;
+    private final AliasesConfigurationProperties aliasesConfigurationProperties;
     @Value("${book-search.books-directory}")
     private final Path booksDirectory;
 
     public void reindexBooks() {
-        String booksIndex = "books-" + System.currentTimeMillis();
+        String booksIndexName = "books-" + System.currentTimeMillis();
+        createBooksIndex(booksIndexName);
+        indexBooks(booksIndexName);
+        reassignOrCreateAliasWithoutDowntime(aliasesConfigurationProperties.getBooksName(), booksIndexName);
+    }
+
+    private void createBooksIndex(String booksIndexName) {
+
         try {
-            elasticsearchClient.indices().create(b -> b.index(booksIndex)
+            elasticsearchClient.indices().create(b -> b.index(booksIndexName)
                     .withJson(getClass().getResourceAsStream("/mappings/books-index.json")));
-            indexBooks(booksIndex);
-            reassignOrCreateAliasWithoutDowntime("books", booksIndex);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IndexCreationException("Error during creating index: " + booksIndexName, e);
         }
     }
+
 
     private void indexBooks(String booksIndex) {
         try(BulkIngester<Object> bulkIngester = createBulkIngester()) {
@@ -60,9 +69,10 @@ public class IndexingService {
                     log.error("Failed to parse book: {}", epubBookPath, e);
                 }
             }
-        } catch (IOException e) {
-            //todo fix this exception
-            throw new RuntimeException(e);
+        }
+        catch (FileFinderException e) {
+            log.error("Error scanning directory {}", booksDirectory);
+            throw e;
         }
     }
 
@@ -74,26 +84,30 @@ public class IndexingService {
                 .flushInterval(bulkConfiguration.getFlushIntervalValue(), bulkConfiguration.getFlushIntervalTimeUnit()));
     }
 
-    private void reassignOrCreateAliasWithoutDowntime(String aliasName, String newIndex) throws IOException {
-        final var aliasUpdateBuilder = new UpdateAliasesRequest.Builder();
-        if (aliasExists(aliasName)) {
-            GetAliasResponse getAliasResponse = elasticsearchClient.indices().getAlias(b -> b.name(aliasName));
-            // Add actions to remove the alias from its current indices
-            getAliasResponse.result().forEach((oldIndex, aliasMetadata) -> {
-                aliasUpdateBuilder.actions(action -> action.removeIndex(r -> r.index(oldIndex)));
-            });
-        }
+    private void reassignOrCreateAliasWithoutDowntime(String aliasName, String newIndex) {
+        try {
+            final var aliasUpdateBuilder = new UpdateAliasesRequest.Builder();
+            if (aliasExists(aliasName)) {
+                GetAliasResponse getAliasResponse = elasticsearchClient.indices().getAlias(b -> b.name(aliasName));
+                // Add actions to remove the alias from its current indices
+                getAliasResponse.result().forEach((oldIndex, aliasMetadata) ->
+                        aliasUpdateBuilder.actions(action -> action.removeIndex(r -> r.index(oldIndex)))
+                );
+            }
 
-        // Add an action to assign the alias to the new index
-        aliasUpdateBuilder.actions(action -> action.add(a -> a.index(newIndex).alias(aliasName)));
+            // Add an action to assign the alias to the new index
+            aliasUpdateBuilder.actions(action -> action.add(a -> a.index(newIndex).alias(aliasName)));
 
-        // Execute the request atomically
-        UpdateAliasesResponse updateAliasesResponse = elasticsearchClient.indices().updateAliases(aliasUpdateBuilder.build());
+            // Execute the request atomically
+            UpdateAliasesResponse updateAliasesResponse = elasticsearchClient.indices().updateAliases(aliasUpdateBuilder.build());
 
-        if (updateAliasesResponse.acknowledged()) {
-            log.info("Alias {} successfully reassigned to index {}", aliasName, newIndex);
-        } else {
-            throw new IOException("Failed to atomically update alias: " + aliasName + " to point to index: " + newIndex);
+            if (updateAliasesResponse.acknowledged()) {
+                log.info("Alias {} successfully reassigned to index {}", aliasName, newIndex);
+            } else {
+                throw new AliasUpdatingException("Failed to atomically update alias: " + aliasName + " to point to index: " + newIndex);
+            }
+        } catch (IOException e) {
+            throw new AliasUpdatingException("Failed to atomically update alias: " + aliasName + " to point to index: " + newIndex, e);
         }
     }
 

@@ -49,9 +49,6 @@ public class BookEpubParser implements BookParser {
 
     private String getBookContentAsString(final nl.siegmann.epublib.domain.Book epubBook) throws IOException {
 
-        //TODO: this might be a bit inefficient to do, it's better to index documents one by one
-        // or maybe index some additional metadata related to the, like what page it is and so on
-
         final List<Resource> resources = epubBook.getResources()
                 .getResourcesByMediaType(MediatypeService.XHTML);
         StringBuilder stringBuilder = new StringBuilder();

@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.blbulyandavbulyan.booksearch.configuration.AliasesConfigurationProperties;
 import com.blbulyandavbulyan.booksearch.service.jackson.JacksonPropertyNamesResolver;
 import com.blbulyandavbulyan.booksearch.service.search.BookResource;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchException;
@@ -26,11 +27,15 @@ import java.util.Optional;
 public class ElasticsearchBookRepository implements BookRepository {
     private final ElasticsearchClient elasticsearchClient;
     private final JacksonPropertyNamesResolver jacksonPropertyNamesResolver;
+    private final AliasesConfigurationProperties aliasesConfigurationProperties;
 
     @Override
     public Optional<BookResource> findById(String id) {
         try {
-            GetResponse<BookResource> bookGetResponse = elasticsearchClient.get(gb -> gb.id(id), BookResource.class);
+            GetResponse<BookResource> bookGetResponse = elasticsearchClient.get(gb -> gb
+                    .source(b -> b.fields(jacksonPropertyNamesResolver.getPropertyNamesFor(BookResource.class)))
+                    .index(aliasesConfigurationProperties.getBooksName())
+                    .id(id), BookResource.class);
             return Optional.ofNullable(bookGetResponse.source());
         } catch (IOException e) {
             throw new BookSearchException("Failed to find book with id: %s".formatted(id), e);
@@ -41,6 +46,7 @@ public class ElasticsearchBookRepository implements BookRepository {
     public BookSearchResource searchBooks(BookSearchQuery bookSearchQuery) {
         try {
             SearchResponse<BookResource> search = elasticsearchClient.search(srb -> srb
+                    .index(aliasesConfigurationProperties.getBooksName())
                     .source(b -> b.filter(sfb -> sfb.includes(jacksonPropertyNamesResolver.getPropertyNamesFor(BookResource.class))))
                     .query(QueryBuilders.bool(qb -> qb
                             .must(buildMainQuery(bookSearchQuery))
