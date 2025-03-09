@@ -1,16 +1,12 @@
 package com.blbulyandavbulyan.booksearch.repository;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._helpers.bulk.BulkIngester;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.blbulyandavbulyan.booksearch.configuration.ElasticSearchBulkConfiguration;
-import com.blbulyandavbulyan.booksearch.controller.BookSearchRequest;
 import com.blbulyandavbulyan.booksearch.model.Book;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchException;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchQuery;
@@ -20,11 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Repository
 @RequiredArgsConstructor
