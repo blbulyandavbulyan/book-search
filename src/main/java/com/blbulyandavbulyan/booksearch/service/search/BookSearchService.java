@@ -4,6 +4,7 @@ import com.blbulyandavbulyan.booksearch.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -17,5 +18,9 @@ public class BookSearchService {
 
     public BookSearchResource searchBooks(BookSearchQuery bookSearchQuery) {
         return bookRepository.searchBooks(bookSearchQuery);
+    }
+
+    public List<BookResource> getSuggestedBooks(String query) {
+        return bookRepository.getSuggestedBooks(query);
     }
 }

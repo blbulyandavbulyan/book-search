@@ -6,8 +6,11 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.CompletionSuggestOption;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.Suggestion;
 import com.blbulyandavbulyan.booksearch.configuration.AliasesConfigurationProperties;
+import com.blbulyandavbulyan.booksearch.model.BookFields;
 import com.blbulyandavbulyan.booksearch.service.jackson.JacksonPropertyNamesResolver;
 import com.blbulyandavbulyan.booksearch.service.search.BookResource;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchException;
@@ -29,7 +32,6 @@ public class ElasticsearchBookRepository implements BookRepository {
     private final JacksonPropertyNamesResolver jacksonPropertyNamesResolver;
     private final AliasesConfigurationProperties aliasesConfigurationProperties;
     private static final String FACETS_AGGREGATION_NAME = "facets";
-    private static final String CONTENT_FIELD_NAME = "content";
 
     @Override
     public Optional<BookResource> findById(String id) {
@@ -75,6 +77,33 @@ public class ElasticsearchBookRepository implements BookRepository {
         }
     }
 
+    @Override
+    public List<BookResource> getSuggestedBooks(String query) {
+        try {
+            String suggestionKey = "autocomplete";
+            return elasticsearchClient.search(b -> b.index(aliasesConfigurationProperties.getBooksName())
+                    .source(sb -> sb.filter(sfb -> sfb.includes(jacksonPropertyNamesResolver.getPropertyNamesFor(BookResource.class))))
+                    .suggest(sb -> sb
+                            .text(query)
+                            .suggesters(suggestionKey, fsb -> fsb
+                                    .completion(cb -> cb
+                                            .field(BookFields.SUGGEST)
+                                            .size(3)
+                                    )
+                            )
+                    ), BookResource.class)
+                    .suggest()
+                    .get(suggestionKey)
+                    .stream()
+                    .map(Suggestion::completion)
+                    .flatMap(s -> s.options().stream())
+                    .map(CompletionSuggestOption::source)
+                    .toList();
+        } catch (IOException e) {
+            throw new BookSearchException("Failed to find suggestions for query: " + query, e);
+        }
+    }
+
     private static Map<String, Aggregation> buildAggreagationsMap(BookSearchQuery bookSearchQuery) {
         return Map.of(FACETS_AGGREGATION_NAME, Aggregation.of(ab -> ab.terms(ta -> ta.field(bookSearchQuery.facetField().getFieldName()))));
     }
@@ -82,8 +111,8 @@ public class ElasticsearchBookRepository implements BookRepository {
     private static Query buildMainQuery(BookSearchQuery bookSearchQuery) {
         String query = bookSearchQuery.query();
         return bookSearchQuery.matchPhrase() ?
-                QueryBuilders.matchPhrase(mpb -> mpb.field(CONTENT_FIELD_NAME).query(query)) :
-                QueryBuilders.match(mqb -> mqb.field(CONTENT_FIELD_NAME).query(query));
+                QueryBuilders.matchPhrase(mpb -> mpb.field(BookFields.CONTENT).query(query)) :
+                QueryBuilders.match(mqb -> mqb.field(BookFields.CONTENT).query(query));
     }
 
     private Query buildFilterQuery(BookSearchQuery bookSearchQuery) {

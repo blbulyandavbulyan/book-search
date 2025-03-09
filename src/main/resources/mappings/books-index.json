@@ -2,6 +2,7 @@
   "mappings": {
     "properties": {
       "title": {
+        "copy_to": "suggest",
         "type": "text"
       },
       "content": {
@@ -12,6 +13,7 @@
       },
       "authors": {
         "type": "text",
+        "copy_to": "suggest",
         "fields": {
           "keyword": {
             "type": "keyword",
@@ -19,6 +21,9 @@
             "normalizer": "keyword_lowercase"
           }
         }
+      },
+      "suggest": {
+        "type": "completion"
       }
     }
   },
