@@ -17,6 +17,11 @@ import java.util.List;
 public class JacksonPropertyNamesResolver {
     private final ObjectMapper objectMapper;
 
+    /**
+     *
+     * @param inputClass class to find json property names
+     * @return list with JSON property names for specified class
+     */
     @SneakyThrows// if we fail, we fail, then probably something wrong in the application code itself
     public List<String> getPropertyNamesFor(Class<?> inputClass) {
         SerializerProvider serializerProvider = objectMapper.getSerializerProviderInstance();

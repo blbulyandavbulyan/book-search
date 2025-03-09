@@ -12,10 +12,23 @@ import java.nio.file.Path;
 @Getter
 @Setter
 public class ElasticSearchConfigurationProperties {
+    /**
+     * URL to elastic search
+     */
     private String url;
-    private String apiKey;
+
+    /**
+     * elastic search username
+     */
     private String username;
+
+    /**
+     * elastic search password
+     */
     private String password;
+
+    /**
+     * Path to elastic search CA certificate
+     */
     private Path caCrtPath;
-    private String aliasName;
 }

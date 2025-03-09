@@ -90,7 +90,8 @@ public class ElasticsearchBookRepository implements BookRepository {
         final var filterField = bookSearchQuery.filterField();
         final var filterValue = bookSearchQuery.filterValue();
         final var filterFieldName = filterField.getFieldName();
-        return switch (filterField) {
+        return switch (filterField) {// I know that switches is kind of not a good idea actually, but here because of new syntax,
+            // I will get a compilation error, if I add another enum value
             case TITLE, AUTHORS -> QueryBuilders.match(qb -> qb.field(filterFieldName).query(filterValue));
             case LANGUAGE -> QueryBuilders.term(qb -> qb.field(filterFieldName).value(filterValue));
         };

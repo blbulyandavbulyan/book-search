@@ -10,5 +10,8 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 public class AliasesConfigurationProperties {
+    /**
+     * Alias name for books index
+     */
     private String booksName = "books";
 }

@@ -110,13 +110,6 @@ public class IndexingService {
         }
     }
 
-    /**
-     * Checks if an alias exists in Elasticsearch.
-     *
-     * @param aliasName The alias name to check.
-     * @return true if the alias exists; false otherwise.
-     * @throws IOException if there is a problem communicating with Elasticsearch.
-     */
     private boolean aliasExists(String aliasName) throws IOException {
         return elasticsearchClient.indices().existsAlias(e -> e.name(aliasName)).value();
     }

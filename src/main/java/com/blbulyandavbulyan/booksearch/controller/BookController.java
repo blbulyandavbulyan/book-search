@@ -8,8 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
 
-import java.net.URI;
-
 
 @RestController
 @RequiredArgsConstructor
@@ -24,7 +22,6 @@ public class BookController {
         return bookService.getBookById(id)
                 .map(bookResponseMapper::toBookResponse)
                 .orElseThrow(() -> Problem.builder()
-                        .withType(URI.create("https://example.org/out-of-stock"))
                         .withTitle("Book not found")
                         .withStatus(Status.NOT_FOUND)
                         .withDetail("Book not found")
