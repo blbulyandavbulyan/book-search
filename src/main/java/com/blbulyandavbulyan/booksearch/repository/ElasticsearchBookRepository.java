@@ -7,7 +7,8 @@ import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.blbulyandavbulyan.booksearch.model.Book;
+import com.blbulyandavbulyan.booksearch.service.jackson.JacksonPropertyNamesResolver;
+import com.blbulyandavbulyan.booksearch.service.search.BookResource;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchException;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchQuery;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchResource;
@@ -24,11 +25,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ElasticsearchBookRepository implements BookRepository {
     private final ElasticsearchClient elasticsearchClient;
+    private final JacksonPropertyNamesResolver jacksonPropertyNamesResolver;
 
     @Override
-    public Optional<Book> findById(String id) {
+    public Optional<BookResource> findById(String id) {
         try {
-            GetResponse<Book> bookGetResponse = elasticsearchClient.get(gb -> gb.id(id), Book.class);
+            GetResponse<BookResource> bookGetResponse = elasticsearchClient.get(gb -> gb.id(id), BookResource.class);
             return Optional.ofNullable(bookGetResponse.source());
         } catch (IOException e) {
             throw new BookSearchException("Failed to find book with id: %s".formatted(id), e);
@@ -38,11 +40,12 @@ public class ElasticsearchBookRepository implements BookRepository {
     @Override
     public BookSearchResource searchBooks(BookSearchQuery bookSearchQuery) {
         try {
-            SearchResponse<Book> search = elasticsearchClient.search(srb -> srb
+            SearchResponse<BookResource> search = elasticsearchClient.search(srb -> srb
+                    .source(b -> b.filter(sfb -> sfb.includes(jacksonPropertyNamesResolver.getPropertyNamesFor(BookResource.class))))
                     .query(QueryBuilders.bool(qb -> qb
                             .must(buildMainQuery(bookSearchQuery))
                             .filter(buildFilterQuery(bookSearchQuery))))
-                    .aggregations(buildAggreagationsMap(bookSearchQuery)), Book.class);
+                    .aggregations(buildAggreagationsMap(bookSearchQuery)), BookResource.class);
 
             List<FacetResource> facetResources = search.aggregations()
                     .get("facets")
@@ -53,7 +56,7 @@ public class ElasticsearchBookRepository implements BookRepository {
                     .map(bucket -> new FacetResource(bucket.key()._toJsonString(), bookSearchQuery.facetField(), bucket.docCount()))
                     .toList();
 
-            List<Book> books = search.hits()
+            List<BookResource> books = search.hits()
                     .hits()
                     .stream()
                     .map(Hit::source)

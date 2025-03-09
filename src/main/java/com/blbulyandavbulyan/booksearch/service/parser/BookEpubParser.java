@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
-import com.blbulyandavbulyan.booksearch.model.Book;
+import com.blbulyandavbulyan.booksearch.model.BookDocument;
 import lombok.RequiredArgsConstructor;
 import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.epub.EpubReader;
@@ -21,16 +21,17 @@ public class BookEpubParser implements BookParser {
     private final EpubReader epubReader;
 
     @Override
-    public Book parse(final Path bookPath) throws BookParseException {
+    public BookDocument parse(final Path bookPath) throws BookParseException {
         try (final var fileInputStream = Files.newInputStream(bookPath)) {
             final var epubBook = epubReader.readEpub(fileInputStream);
 
-            return Book.builder()
+            return BookDocument.builder()
                     .id(UUID.randomUUID().toString())
                     .title(epubBook.getTitle())
                     .authors(getAuthorNamesFromEpubBook(epubBook))
                     .language(epubBook.getMetadata().getLanguage())
                     .content(getBookContentAsString(epubBook))
+                    .fileName(bookPath.toString())
                     .build();
         }
         catch (IOException e){

@@ -2,8 +2,8 @@ package com.blbulyandavbulyan.booksearch.service.parser;
 
 import java.nio.file.Path;
 
-import com.blbulyandavbulyan.booksearch.model.Book;
+import com.blbulyandavbulyan.booksearch.model.BookDocument;
 
 public interface BookParser {
-    Book parse(Path bookPath) throws BookParseException;
+    BookDocument parse(Path bookPath) throws BookParseException;
 }

@@ -1,6 +1,6 @@
 package com.blbulyandavbulyan.booksearch.controller;
 
-import com.blbulyandavbulyan.booksearch.service.IndexingService;
+import com.blbulyandavbulyan.booksearch.service.index.IndexingService;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchResource;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchService;
 import lombok.RequiredArgsConstructor;

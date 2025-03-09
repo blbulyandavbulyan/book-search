@@ -8,7 +8,7 @@ import java.util.List;
 public record BookResponse(String id,
                            String title,
                            List<String> authors,
-                           String content,
+                           String fileName,
                            String language) {
     @SuppressWarnings("unused")// suppress warnings because these enums will come from the request
     public enum BookFilterField {

@@ -1,4 +1,4 @@
-package com.blbulyandavbulyan.booksearch.service;
+package com.blbulyandavbulyan.booksearch.service.file;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 public class FileFinderService {
-    Collection<Path> findAllFilesInDirectoryByExtension(Path directory, String extension) throws IOException {
+    public Collection<Path> findAllFilesInDirectoryByExtension(Path directory, String extension) throws IOException {
         try (Stream<Path> pathStream = Files.walk(directory)) {
             return pathStream.filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(extension))

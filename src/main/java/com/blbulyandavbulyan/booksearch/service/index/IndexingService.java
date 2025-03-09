@@ -1,11 +1,12 @@
-package com.blbulyandavbulyan.booksearch.service;
+package com.blbulyandavbulyan.booksearch.service.index;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._helpers.bulk.BulkIngester;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.indices.*;
 import com.blbulyandavbulyan.booksearch.configuration.ElasticSearchBulkConfiguration;
-import com.blbulyandavbulyan.booksearch.model.Book;
+import com.blbulyandavbulyan.booksearch.model.BookDocument;
+import com.blbulyandavbulyan.booksearch.service.file.FileFinderService;
 import com.blbulyandavbulyan.booksearch.service.parser.BookParseException;
 import com.blbulyandavbulyan.booksearch.service.parser.BookParser;
 import lombok.RequiredArgsConstructor;
@@ -46,13 +47,13 @@ public class IndexingService {
             for (Path epubBookPath : epubBookPaths) {
                 try{
                     log.debug("Parsing book: {}", epubBookPath);
-                    Book parsedBook = bookParser.parse(epubBookPath);
+                    BookDocument parsedBookDocument = bookParser.parse(epubBookPath);
                     log.debug("Indexing book: {}", epubBookPath);
                     bulkIngester.add(BulkOperation.of(b -> b
                             .create(cb -> cb
                                     .index(booksIndex)
-                                    .id(parsedBook.id())
-                                    .document(parsedBook)
+                                    .id(parsedBookDocument.id())
+                                    .document(parsedBookDocument)
                             )));
                 }
                 catch (BookParseException e){
@@ -78,9 +79,9 @@ public class IndexingService {
         if (aliasExists(aliasName)) {
             GetAliasResponse getAliasResponse = elasticsearchClient.indices().getAlias(b -> b.name(aliasName));
             // Add actions to remove the alias from its current indices
-            getAliasResponse.result().forEach((oldIndex, aliasMetadata) ->
-                    aliasUpdateBuilder.actions(action -> action.remove(r -> r.index(oldIndex).alias(aliasName)))
-            );
+            getAliasResponse.result().forEach((oldIndex, aliasMetadata) -> {
+                aliasUpdateBuilder.actions(action -> action.removeIndex(r -> r.index(oldIndex)));
+            });
         }
 
         // Add an action to assign the alias to the new index
