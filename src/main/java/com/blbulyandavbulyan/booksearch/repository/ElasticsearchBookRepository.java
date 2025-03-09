@@ -28,6 +28,7 @@ public class ElasticsearchBookRepository implements BookRepository {
     private final ElasticsearchClient elasticsearchClient;
     private final JacksonPropertyNamesResolver jacksonPropertyNamesResolver;
     private final AliasesConfigurationProperties aliasesConfigurationProperties;
+    private static final String FACETS_AGGREGATION_NAME = "facets";
 
     @Override
     public Optional<BookResource> findById(String id) {
@@ -54,7 +55,7 @@ public class ElasticsearchBookRepository implements BookRepository {
                     .aggregations(buildAggreagationsMap(bookSearchQuery)), BookResource.class);
 
             List<FacetResource> facetResources = search.aggregations()
-                    .get("facets")
+                    .get(FACETS_AGGREGATION_NAME)
                     .sterms()
                     .buckets()
                     .array()
@@ -74,7 +75,7 @@ public class ElasticsearchBookRepository implements BookRepository {
     }
 
     private static Map<String, Aggregation> buildAggreagationsMap(BookSearchQuery bookSearchQuery) {
-        return Map.of("facets", Aggregation.of(ab -> ab.terms(ta -> ta.field(bookSearchQuery.facetField().getFieldName()))));
+        return Map.of(FACETS_AGGREGATION_NAME, Aggregation.of(ab -> ab.terms(ta -> ta.field(bookSearchQuery.facetField().getFieldName()))));
     }
 
     private static Query buildMainQuery(BookSearchQuery bookSearchQuery) {
