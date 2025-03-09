@@ -1,5 +1,6 @@
 package com.blbulyandavbulyan.booksearch.controller;
 
+import com.blbulyandavbulyan.booksearch.service.IndexingService;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchResource;
 import com.blbulyandavbulyan.booksearch.service.search.BookSearchService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.net.URI;
 public class BookController {
     private final BookSearchService bookService;
     private final BookResponseMapper bookResponseMapper;
+    private final IndexingService indexingService;
 
     @GetMapping("{id}")
     public BookResponse getBookById(@PathVariable(name = "id") String id) {
@@ -34,5 +36,10 @@ public class BookController {
     public BookSearchResponse searchBooks(@RequestBody BookSearchRequest bookSearchRequest) {
         BookSearchResource bookSearchResource = bookService.searchBooks(bookSearchRequest.toBookSearchResource());
         return bookResponseMapper.toBookSearchResponse(bookSearchResource);
+    }
+
+    @PostMapping("index-all")
+    public void indexAll(){
+        indexingService.reindexBooks();
     }
 }
