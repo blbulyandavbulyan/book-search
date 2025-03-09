@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class ElasticsearchBookRepository implements BookRepository {
     private final ElasticsearchClient elasticsearchClient;
-    private final ElasticSearchBulkConfiguration bulkConfiguration;
 
     @Override
     public Optional<Book> findById(String id) {
@@ -39,24 +38,6 @@ public class ElasticsearchBookRepository implements BookRepository {
             return Optional.ofNullable(bookGetResponse.source());
         } catch (IOException e) {
             throw new BookSearchException("Failed to find book with id: %s".formatted(id), e);
-        }
-    }
-
-    @Override
-    public void save(List<Book> books) {
-        try (BulkIngester<Object> bulkIngester = BulkIngester.of(b -> b
-                .client(elasticsearchClient)
-                .maxOperations(bulkConfiguration.getMaxOperations())
-                .maxSize(bulkConfiguration.getMaxSize())
-                .flushInterval(bulkConfiguration.getFlushIntervalValue(), bulkConfiguration.getFlushIntervalTimeUnit()))) {
-            books.stream()
-                    .map(book -> BulkOperation.of(b -> b
-                            .create(cb -> cb
-                                    .index("books")
-                                    .id(book.id())
-                                    .document(book)
-                            )))
-                    .forEach(bulkIngester::add);
         }
     }
 

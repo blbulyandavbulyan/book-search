@@ -21,7 +21,7 @@ public class BookEpubParser implements BookParser {
     private final EpubReader epubReader;
 
     @Override
-    public Book parse(final Path bookPath) throws IOException {
+    public Book parse(final Path bookPath) throws BookParseException {
         try (final var fileInputStream = Files.newInputStream(bookPath)) {
             final var epubBook = epubReader.readEpub(fileInputStream);
 
@@ -32,6 +32,9 @@ public class BookEpubParser implements BookParser {
                     .language(epubBook.getMetadata().getLanguage())
                     .content(getBookContentAsString(epubBook))
                     .build();
+        }
+        catch (IOException e){
+            throw new BookParseException(e);
         }
     }
 

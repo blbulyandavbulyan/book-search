@@ -9,6 +9,5 @@ import java.util.Optional;
 
 public interface BookRepository {
     Optional<Book> findById(String id);
-    void save(List<Book> books);
     BookSearchResource searchBooks(BookSearchQuery bookSearchQuery);
 }
